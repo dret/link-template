@@ -124,21 +124,21 @@ Table of Contents
    determined as defined for the Link header field in Section 3 of
    [WEB-LINKING].
 
-   Parameters on a templated-link have identical semantics to those of a
+   Parameters on a templated link have identical semantics to those of a
    Link header field.  This includes (but is not limited to) the use of
    the "rel" parameter to convey the relation type, the "anchor"
    parameter to modify the context IRI, and so on.  Parameter values
    MUST be Strings.
 
-   Likewise, the requirements for parameters on templated-links are the
+   Likewise, the requirements for parameters on templated links are the
    same as those for a Link header field.
 
    This specification defines additional semantics for the "var-base"
-   parameter on templated-links; see below.
+   parameter on templated links; see below.
 
 2.1.  The 'var-base' parameter
 
-   When a templated-link has a 'var-base' parameter, its value conveys a
+   When a templated link has a 'var-base' parameter, its value conveys a
    URI-reference that is used as a base URI for the variable names in
    the URI template.  This allows template variables to be globally
    identified, rather than specific to the context of use.
