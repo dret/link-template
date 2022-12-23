@@ -9,27 +9,26 @@
 <meta content="
        This specification defines the Link-Template HTTP header field, providing a means for describing the structure of a link between two resources, so that new links can be generated. 
     " name="description">
-<meta content="xml2rfc 3.12.4" name="generator">
+<meta content="xml2rfc 3.15.3" name="generator">
 <meta content="link relation" name="keyword">
 <meta content="draft-ietf-httpapi-link-template-latest" name="ietf.draft">
 <!-- Generator version information:
-  xml2rfc 3.12.4
-    Python 3.9.7
+  xml2rfc 3.15.3
+    Python 3.10.9
     appdirs 1.4.4
-    ConfigArgParse 1.3
-    google-i18n-address 2.5.1
+    ConfigArgParse 1.5.3
+    google-i18n-address 2.5.2
     html5lib 1.1
     intervaltree 3.1.0
-    Jinja2 2.11.3
-    kitchen 1.2.6
-    lxml 4.6.5
-    MarkupSafe 2.0.1
-    pycountry 20.7.3
-    pyflakes 2.3.1
-    PyYAML 5.4.1
-    requests 2.26.0
-    setuptools 52.0.0
+    Jinja2 3.1.2
+    lxml 4.9.2
+    MarkupSafe 2.1.1
+    pycountry 22.3.5
+    PyYAML 6.0
+    requests 2.28.1
+    setuptools 65.6.0
     six 1.16.0
+    wcwidth 0.2.5
 -->
 <link href="draft-ietf-httpapi-link-template.xml" rel="alternate" type="application/rfc+xml">
 <link href="#copyright" rel="license">
@@ -153,6 +152,14 @@
   font-weight: 700;
   font-display: swap;
   src: local('Lora Bold'), local('Lora-Bold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-bold-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'Lora';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Lora SemiBold'), local('Lora-SemiBold'), url('https://martinthomson.github.io/rfc-css/fonts/lora-semibold-latin.woff2') format('woff2');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -336,7 +343,7 @@ ol, ul {
   padding: 0;
   margin: 0 0 0.5em 2em;
 }
-ol ol, ul ul, ol ul, ul ol {
+:is(ol, ul) :is(ol, ul) {
   margin-left: 1em;
 }
 li {
@@ -351,31 +358,44 @@ ul.empty, .ulEmpty {
 ul.empty li, .ulEmpty li {
   margin-top: 0.5em;
 }
-ul.compact, .ulCompact,
-ol.compact, .olCompact {
+:is(ul, ol).compact, .ulCompact, .olCompact {
   line-height: 100%;
   margin: 0 0 0 2em;
 }
 
 /* definition lists */
 dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
 }
 dl > dt {
   float: left;
   margin-right: 1em;
+  min-width: 12ch;
+}
+dl.dlNewline > dt {
+  float: none;
 }
 dl > dd {
   margin-bottom: .8em;
-  min-height: 1.3em;
+  margin-left: var(--indent) !important; /* stupid element overrides */
+  min-height: 2ex;
 }
-dl.compact > dd, .dlCompact > dd {
-  margin-bottom: 0em;
+:is(dl.compact, .dlCompact) > dd {
+  margin-bottom: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:first-child, .break:first-child + *) {
+  margin-top: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:last-child) {
+  margin-bottom: 0;
 }
 dl > dd > dl {
   margin-top: 0.5em;
-  margin-bottom: 0em;
+  margin-bottom: 0;
 }
-dd.break {
+:is(dd, span).break {
   display: none;
 }
 
@@ -395,7 +415,7 @@ a[href]:hover {
 a[href].selfRef:hover {
   background-color: var(--highlight-color);
 }
-a.xref {
+a.xref:is(.cite, .auto), :is(#status-of-memo, #copyright) a {
   white-space: nowrap;
 }
 
@@ -407,8 +427,13 @@ tt, code, pre {
 tt, code {
   /* changing the font for inline elements leads to different ascender
      and descender heights; as we want to retain baseline alignment,
-     remove leading to avoid altering the final height of lines */
+     remove leading to avoid altering the final height of lines
+     note: this fails if these blocks take an entire line,
+     a different solution would be great */
   line-height: 0;
+}
+:is(h1, h2, h3, h4, h5, h6) :is(tt, code) {
+  font-size: 84%;
 }
 pre {
   border: 1px solid var(--line-color);
@@ -434,6 +459,19 @@ figcaption, caption {
   text-align: left;
 }
 @media screen {
+  /* Auto-collapse boilerplate. */
+  :is(#status-of-memo, #copyright) p {
+    margin: -2px 0;
+    max-height: 0;
+    transition: max-height 2s ease, margin 0.5s ease 0.5s;
+    overflow: hidden;
+  }
+  :is(#status-of-memo, #copyright):hover p,
+  :is(#status-of-memo, #copyright) h2:target ~ p {
+    margin: 0.5em 0;
+    max-height: 500px;
+    overflow: auto;
+  }
   pre, svg {
     display: inline-block;
     overflow-x: auto;
@@ -449,7 +487,7 @@ figcaption, caption {
     display: block;
     width: calc(100% - 25px);
   }
-  pre + .pilcrow, svg + .pilcrow {
+  :is(pre, svg) + .pilcrow {
     display: inline-block;
     vertical-align: text-bottom;
     padding-bottom: 8px;
@@ -498,17 +536,11 @@ th, td {
 th {
   background-color: var(--line-color);
 }
-tr:nth-child(2n) > td {
+:is(tr:nth-child(2n), thead+tbody > tr:nth-child(2n+1)) > td {
   background-color: var(--background-color);
 }
-tr:nth-child(2n+1) > td {
+:is(tr:nth-child(2n+1), thead+tbody > tr:nth-child(2n)) > td {
   background-color: var(--highlight-color);
-}
-thead+tbody > tr:nth-child(2n) > td {
-  background-color: var(--highlight-color);
-}
-thead+tbody > tr:nth-child(2n+1) > td {
-  background-color: var(--background-color);
 }
 table caption {
   margin: 0;
@@ -548,8 +580,9 @@ hr {
 }
 .bcp14 {
   font-variant: small-caps;
+  font-weight: 600;
+  font-size: 14.5px;
 }
-
 .role {
   font-variant: all-small-caps;
 }
@@ -559,17 +592,18 @@ hr {
   margin: 0;
   font-size: var(--small-font-size);
   line-height: 18px;
-  --identifier-width: 8em;
+  --identifier-width: 15ch;
 }
 #identifiers dt {
   width: var(--identifier-width);
-  margin: 0;
+  min-width: var(--identifier-width);
   clear: left;
   float: left;
   text-align: right;
 }
 #identifiers dd {
-  margin: 0 0 0 calc(1em + var(--identifier-width));
+  margin: 0;
+  margin-left: calc(1em + var(--identifier-width)) !important;
   min-width: 5em;
 }
 #identifiers .authors .author {
@@ -619,8 +653,13 @@ hr {
   font-weight: bold;
   min-width: 7em;
 }
+.references dt:target::before {
+  content: "⇒";
+  width: 15px;
+  margin: 0 10px 0 -25px;
+}
 .references dd {
-  margin-left: 8em;
+  margin-left: 8em !important;
   overflow: auto;
 }
 
@@ -788,7 +827,7 @@ hr.addr {
     margin: 0 0 0 4px;
     font-size: var(--small-font-size);
   }
-  #toc ul p, #toc ul li {
+  #toc ul :is(p, li) {
     margin: 2px 0;
     line-height: 22px;
   }
@@ -887,24 +926,14 @@ a.toplink {
   margin: 8px 0.5em 0;
 }
 
-/* Fix the dl styling to match the RFC 7992 attributes */
-dl > dt,
-dl.dlParallel > dt {
-  float: left;
-  margin-right: 1em;
-}
-dl.dlNewline > dt {
-  float: none;
-}
-
 /* Provide styling for table cell text alignment */
-table .text-left, table .text-left {
+table .text-left {
   text-align: left;
 }
-table .text-center, table .text-center {
+table .text-center {
   text-align: center;
 }
-table .text-right, table .text-right {
+table .text-right {
   text-align: right;
 }
 
@@ -971,12 +1000,6 @@ address div.right {
   }
 
 }
-/* Tweak the bcp14 keyword presentation */
-.bcp14 {
-  font-variant: small-caps;
-  font-weight: bold;
-  font-size: 0.9em;
-}
 
 /* Dark mode. */
 @media (prefers-color-scheme: dark) {
@@ -991,33 +1014,34 @@ address div.right {
   --pilcrow-strong: #666;
   scrollbar-color: #777 #333;
 }
-/* Trick: a prefix match works because only black and white are allowed */
-svg [stroke="black"], svg [stroke^="#000"] {
+}
+
+/* SVG Trick: a prefix match works because only black and white are allowed */
+svg :is([stroke="black"], [stroke^="#000"]) {
   stroke: var(--text-color);
 }
-svg [stroke="white"], svg [stroke^="#fff"] {
+svg :is([stroke="white"], [stroke^="#fff"]) {
   stroke: var(--background-color);
 }
-svg [fill="black"], svg [fill^="#000"], svg :not([fill]) {
+svg :is([fill="black"], [fill^="#000"], :not([fill])) {
   fill: var(--text-color);
 }
-svg [stroke="fill"], svg [fill^="#fff"] {
+svg :is([stroke="fill"], [fill^="#fff"]) {
   fill: var(--background-color);
-}
 }
 </style>
 
 </head>
-<body>
+<body class="xml2rfc">
 <table class="ears">
 <thead><tr>
 <td class="left">Internet-Draft</td>
 <td class="center">Link-Template</td>
-<td class="right">April 2022</td>
+<td class="right">December 2022</td>
 </tr></thead>
 <tfoot><tr>
 <td class="left">Nottingham</td>
-<td class="center">Expires 30 October 2022</td>
+<td class="center">Expires 26 June 2023</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1030,12 +1054,12 @@ svg [stroke="fill"], svg [fill^="#fff"] {
 <dd class="internet-draft">draft-ietf-httpapi-link-template-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2022-04-28" class="published">28 April 2022</time>
+<time datetime="2022-12-23" class="published">23 December 2022</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2022-10-30">30 October 2022</time></dd>
+<dd class="expires"><time datetime="2023-06-26">26 June 2023</time></dd>
 <dt class="label-authors">Author:</dt>
 <dd class="authors">
 <div class="author">
@@ -1060,7 +1084,8 @@ svg [stroke="fill"], svg [fill^="#fff"] {
 <p id="section-note.1-3">
         Discussion of this document takes place on the
         Building Blocks for HTTP APIs Working Group mailing list (<span><a href="mailto:httpapi@ietf.org">mailto:httpapi@ietf.org</a></span>),
-        which is archived at <span><a href="https://mailarchive.ietf.org/arch/browse/httpapi/">https://mailarchive.ietf.org/arch/browse/httpapi/</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
+        which is archived at <span><a href="https://mailarchive.ietf.org/arch/browse/httpapi/">https://mailarchive.ietf.org/arch/browse/httpapi/</a></span>.
+        Subscribe at <span><a href="https://www.ietf.org/mailman/listinfo/httpapi/">https://www.ietf.org/mailman/listinfo/httpapi/</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
 <p id="section-note.1-4">Source for this draft and an issue tracker can be found at
         <span><a href="https://github.com/ietf-wg-httpapi/link-template">https://github.com/ietf-wg-httpapi/link-template</a></span>.<a href="#section-note.1-4" class="pilcrow">¶</a></p>
 </section>
@@ -1083,7 +1108,7 @@ svg [stroke="fill"], svg [fill^="#fff"] {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 30 October 2022.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 26 June 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1113,32 +1138,32 @@ svg [stroke="fill"], svg [fill^="#fff"] {
         </h2>
 <nav class="toc"><ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
-            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="xref">1</a>.  <a href="#name-introduction" class="xref">Introduction</a></p>
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1.2.1">
-                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="xref">1.1</a>.  <a href="#name-notational-conventions" class="xref">Notational Conventions</a></p>
+                <p id="section-toc.1-1.1.2.1.1" class="keepWithNext"><a href="#section-1.1" class="auto internal xref">1.1</a>.  <a href="#name-notational-conventions" class="internal xref">Notational Conventions</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
-            <p id="section-toc.1-1.2.1"><a href="#section-2" class="xref">2</a>.  <a href="#name-the-link-template-header-fi" class="xref">The Link-Template Header Field</a></p>
+            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-the-link-template-header-fi" class="internal xref">The Link-Template Header Field</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
-                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="xref">2.1</a>.  <a href="#name-the-var-base-parameter" class="xref">The 'var-base' parameter</a></p>
+                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-the-var-base-parameter" class="internal xref">The 'var-base' parameter</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1"><a href="#section-3" class="xref">3</a>.  <a href="#name-security-considerations" class="xref">Security Considerations</a></p>
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="xref">4</a>.  <a href="#name-iana-considerations" class="xref">IANA Considerations</a></p>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="xref">5</a>.  <a href="#name-normative-references" class="xref">Normative References</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#appendix-A" class="xref"></a><a href="#name-authors-address" class="xref">Author's Address</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-authors-address" class="internal xref">Author's Address</a></p>
 </li>
         </ul>
 </nav>
@@ -1149,8 +1174,8 @@ svg [stroke="fill"], svg [fill^="#fff"] {
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1"><span>[<a href="#URI-TEMPLATE" class="xref">URI-TEMPLATE</a>]</span> defines a syntax for templates that, when expanded using a set of variables, results in a URI <span>[<a href="#URI" class="xref">URI</a>]</span>.<a href="#section-1-1" class="pilcrow">¶</a></p>
-<p id="section-1-2">This specification defines a HTTP header field <span>[<a href="#HTTP" class="xref">HTTP</a>]</span> for conveying templates for links in the headers of a HTTP message. It is complimentary to the Link header field defined in <span><a href="https://rfc-editor.org/rfc/rfc8288#section-3" class="relref">Section 3</a> of [<a href="#WEB-LINKING" class="xref">WEB-LINKING</a>]</span>, which carries links directly.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-1"><span>[<a href="#URI-TEMPLATE" class="cite xref">URI-TEMPLATE</a>]</span> defines a syntax for templates that, when expanded using a set of variables, results in a URI <span>[<a href="#URI" class="cite xref">URI</a>]</span>.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">This specification defines a HTTP header field <span>[<a href="#HTTP" class="cite xref">HTTP</a>]</span> for conveying templates for links in the headers of a HTTP message. It is complimentary to the Link header field defined in <span><a href="https://rfc-editor.org/rfc/rfc8288#section-3" class="relref">Section 3</a> of [<a href="#WEB-LINKING" class="cite xref">WEB-LINKING</a>]</span>, which carries links directly.<a href="#section-1-2" class="pilcrow">¶</a></p>
 <div id="notational-conventions">
 <section id="section-1.1">
         <h3 id="name-notational-conventions">
@@ -1158,9 +1183,9 @@ svg [stroke="fill"], svg [fill^="#fff"] {
         </h3>
 <p id="section-1.1-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
 "<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
-described in BCP 14 <span>[<a href="#RFC2119" class="xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="xref">RFC8174</a>]</span> when, and only when, they
+described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
 appear in all capitals, as shown here.<a href="#section-1.1-1" class="pilcrow">¶</a></p>
-<p id="section-1.1-2">This document uses the Augmented BNF defined in <span>[<a href="#HTTP" class="xref">HTTP</a>]</span> to specify valid protocol elements. Additionally, it uses the modified "parameter" rule from <span>[<a href="#RFC5987" class="xref">RFC5987</a>]</span> and the "URI-Template" rule from <span>[<a href="#URI-TEMPLATE" class="xref">URI-TEMPLATE</a>]</span>.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
+<p id="section-1.1-2">This specification uses the following terms from <span>[<a href="#STRUCTURED-FIELDS" class="cite xref">STRUCTURED-FIELDS</a>]</span>: List, String, Parameter.<a href="#section-1.1-2" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -1170,24 +1195,19 @@ appear in all capitals, as shown here.<a href="#section-1.1-1" class="pilcrow">�
       <h2 id="name-the-link-template-header-fi">
 <a href="#section-2" class="section-number selfRef">2. </a><a href="#name-the-link-template-header-fi" class="section-name selfRef">The Link-Template Header Field</a>
       </h2>
-<p id="section-2-1">The Link-Template header field provides a means for serialising one or more links into HTTP message metadata. It is semantically equivalent to the Link header field defined in <span><a href="https://rfc-editor.org/rfc/rfc8288#section-3" class="relref">Section 3</a> of [<a href="#WEB-LINKING" class="xref">WEB-LINKING</a>]</span>, except that it uses URI Templates <span>[<a href="#URI-TEMPLATE" class="xref">URI-TEMPLATE</a>]</span> to convey the structure of links.<a href="#section-2-1" class="pilcrow">¶</a></p>
-<div id="section-2-2">
-<pre class="lang-abnf sourcecode">
-Link-Template  = "Link-Template" ":" #templated-link
-templated-link = "&lt;" URI-Template "&gt;" *( ";" parameter )
-</pre><a href="#section-2-2" class="pilcrow">¶</a>
-</div>
+<p id="section-2-1">The Link-Template header field is a Structured Field <span>[<a href="#STRUCTURED-FIELDS" class="cite xref">STRUCTURED-FIELDS</a>]</span> that serializes one or more links into HTTP message metadata. It is semantically equivalent to the Link header field defined in <span><a href="https://rfc-editor.org/rfc/rfc8288#section-3" class="relref">Section 3</a> of [<a href="#WEB-LINKING" class="cite xref">WEB-LINKING</a>]</span>, except that it uses URI Templates <span>[<a href="#URI-TEMPLATE" class="cite xref">URI-TEMPLATE</a>]</span> to convey the structure of links.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2">Its value is a List of Strings. Each String is a URI Template, and Parameters on it carry associated metadata.<a href="#section-2-2" class="pilcrow">¶</a></p>
 <p id="section-2-3">For example:<a href="#section-2-3" class="pilcrow">¶</a></p>
-<div id="section-2-4">
-<pre class="lang-http-message sourcecode">
-Link-Template: &lt;/{username}&gt;; rel="https://example.org/rel/user"
+<div class="lang-http-message sourcecode" id="section-2-4">
+<pre>
+Link-Template: "/{username}"; rel="https://example.org/rel/user"
 </pre><a href="#section-2-4" class="pilcrow">¶</a>
 </div>
 <p id="section-2-5">indicates that a resource with the relation type "https://example.org/rel/user" can be found by interpolating the "username" variable into the template given.<a href="#section-2-5" class="pilcrow">¶</a></p>
-<p id="section-2-6">The target for the link (as defined in <span><a href="https://rfc-editor.org/rfc/rfc8288#section-2" class="relref">Section 2</a> of [<a href="#WEB-LINKING" class="xref">WEB-LINKING</a>]</span>) is the result of expanding the URI Template <span>[<a href="#URI-TEMPLATE" class="xref">URI-TEMPLATE</a>]</span> (being converted to an absolute URI after expansion, if necessary).<a href="#section-2-6" class="pilcrow">¶</a></p>
-<p id="section-2-7">The context, relation type and target attributes for the link are determined as defined for the Link header field in <span><a href="https://rfc-editor.org/rfc/rfc8288#section-3" class="relref">Section 3</a> of [<a href="#WEB-LINKING" class="xref">WEB-LINKING</a>]</span>.<a href="#section-2-7" class="pilcrow">¶</a></p>
-<p id="section-2-8">Parameters on a templated-link have identical semantics to those of a Link header field. This includes (but is not limited to) the use of the "rel" parameter to convey the relation type, the "anchor" parameter to modify the context IRI, and so on.<a href="#section-2-8" class="pilcrow">¶</a></p>
-<p id="section-2-9">Likewise, the requirements for parameters on templated-links are the same as those for a Link header field; in particular, the "rel" parameter <span class="bcp14">MUST NOT</span> appear more than once, and if it does, the templated-link <span class="bcp14">MUST</span> be ignored by parsers.<a href="#section-2-9" class="pilcrow">¶</a></p>
+<p id="section-2-6">The target for the link (as defined in <span><a href="https://rfc-editor.org/rfc/rfc8288#section-2" class="relref">Section 2</a> of [<a href="#WEB-LINKING" class="cite xref">WEB-LINKING</a>]</span>) is the result of expanding the URI Template <span>[<a href="#URI-TEMPLATE" class="cite xref">URI-TEMPLATE</a>]</span> (being converted to an absolute URI after expansion, if necessary).<a href="#section-2-6" class="pilcrow">¶</a></p>
+<p id="section-2-7">The context, relation type and target attributes for the link are determined as defined for the Link header field in <span><a href="https://rfc-editor.org/rfc/rfc8288#section-3" class="relref">Section 3</a> of [<a href="#WEB-LINKING" class="cite xref">WEB-LINKING</a>]</span>.<a href="#section-2-7" class="pilcrow">¶</a></p>
+<p id="section-2-8">Parameters on a templated-link have identical semantics to those of a Link header field. This includes (but is not limited to) the use of the "rel" parameter to convey the relation type, the "anchor" parameter to modify the context IRI, and so on. Parameter values <span class="bcp14">MUST</span> be Strings.<a href="#section-2-8" class="pilcrow">¶</a></p>
+<p id="section-2-9">Likewise, the requirements for parameters on templated-links are the same as those for a Link header field.<a href="#section-2-9" class="pilcrow">¶</a></p>
 <p id="section-2-10">This specification defines additional semantics for the "var-base" parameter on templated-links; see below.<a href="#section-2-10" class="pilcrow">¶</a></p>
 <div id="the-var-base-parameter">
 <section id="section-2.1">
@@ -1196,20 +1216,20 @@ Link-Template: &lt;/{username}&gt;; rel="https://example.org/rel/user"
         </h3>
 <p id="section-2.1-1">When a templated-link has a 'var-base' parameter, its value conveys a URI-reference that is used as a base URI for the variable names in the URI template. This allows template variables to be globally identified, rather than specific to the context of use.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
 <p id="section-2.1-2">Dereferencing the URI for a particular variable might lead to more information about the syntax or semantics of that variable; specification of particular formats for this information is out of scope for this document.<a href="#section-2.1-2" class="pilcrow">¶</a></p>
-<p id="section-2.1-3">To determine the URI for a given variable, the value given is used as a base URI in reference resolution (as specified in <span>[<a href="#URI" class="xref">URI</a>]</span>). If the resulting URI is still relative, the context of the link is used as the base URI in a further resolution; see <span>[<a href="#WEB-LINKING" class="xref">WEB-LINKING</a>]</span>.<a href="#section-2.1-3" class="pilcrow">¶</a></p>
+<p id="section-2.1-3">To determine the URI for a given variable, the value given is used as a base URI in reference resolution (as specified in <span>[<a href="#URI" class="cite xref">URI</a>]</span>). If the resulting URI is still relative, the context of the link is used as the base URI in a further resolution; see <span>[<a href="#WEB-LINKING" class="cite xref">WEB-LINKING</a>]</span>.<a href="#section-2.1-3" class="pilcrow">¶</a></p>
 <p id="section-2.1-4">For example:<a href="#section-2.1-4" class="pilcrow">¶</a></p>
-<div id="section-2.1-5">
-<pre class="lang-http-message sourcecode">
-Link-Template: &lt;/widgets/{widget_id}&gt;;
+<div class="lang-http-message sourcecode" id="section-2.1-5">
+<pre>
+Link-Template: "/widgets/{widget_id}"
                rel="https://example.org/rel/widget";
                var-base="https://example.org/vars/"
 </pre><a href="#section-2.1-5" class="pilcrow">¶</a>
 </div>
 <p id="section-2.1-6">indicates that a resource with the relation type "https://example.org/rel/widget" can be found by interpolating the "https://example.org/vars/widget_id" variable into the template given.<a href="#section-2.1-6" class="pilcrow">¶</a></p>
 <p id="section-2.1-7">If the current context of the message that the header appears within is "https://example.org/", the same information could be conveyed by this header field:<a href="#section-2.1-7" class="pilcrow">¶</a></p>
-<div id="section-2.1-8">
-<pre class="lang-http-message sourcecode">
-Link-Template: &lt;/widgets/{widget_id}&gt;;
+<div class="lang-http-message sourcecode" id="section-2.1-8">
+<pre>
+Link-Template: "/widgets/{widget_id}";
                rel="https://example.org/rel/widget";
                var-base="/vars/"
 </pre><a href="#section-2.1-8" class="pilcrow">¶</a>
@@ -1223,7 +1243,7 @@ Link-Template: &lt;/widgets/{widget_id}&gt;;
       <h2 id="name-security-considerations">
 <a href="#section-3" class="section-number selfRef">3. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
-<p id="section-3-1">The security consideration for the Link header field in <span>[<a href="#WEB-LINKING" class="xref">WEB-LINKING</a>]</span> and those for URI Templates <span>[<a href="#URI-TEMPLATE" class="xref">URI-TEMPLATE</a>]</span> both apply.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-1">The security consideration for the Link header field in <span>[<a href="#WEB-LINKING" class="cite xref">WEB-LINKING</a>]</span> and those for URI Templates <span>[<a href="#URI-TEMPLATE" class="cite xref">URI-TEMPLATE</a>]</span> both apply.<a href="#section-3-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="iana-considerations">
@@ -1254,13 +1274,13 @@ Specification document: [this document]
       <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
 <dd class="break"></dd>
-<dt id="RFC5987">[RFC5987]</dt>
-      <dd>
-<span class="refAuthor">Reschke, J.</span>, <span class="refTitle">"Character Set and Language Encoding for Hypertext Transfer Protocol (HTTP) Header Field Parameters"</span>, <span class="seriesInfo">RFC 5987</span>, <span class="seriesInfo">DOI 10.17487/RFC5987</span>, <time datetime="2010-08" class="refDate">August 2010</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5987">https://www.rfc-editor.org/rfc/rfc5987</a>&gt;</span>. </dd>
-<dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
       <dd>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="STRUCTURED-FIELDS">[STRUCTURED-FIELDS]</dt>
+      <dd>
+<span class="refAuthor">Nottingham, M.</span> and <span class="refAuthor">P-H. Kamp</span>, <span class="refTitle">"Structured Field Values for HTTP"</span>, <span class="seriesInfo">RFC 8941</span>, <span class="seriesInfo">DOI 10.17487/RFC8941</span>, <time datetime="2021-02" class="refDate">February 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8941">https://www.rfc-editor.org/rfc/rfc8941</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 <dt id="URI">[URI]</dt>
       <dd>

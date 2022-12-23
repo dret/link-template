@@ -3,9 +3,9 @@
 
 
 Building Blocks for HTTP APIs                              M. Nottingham
-Internet-Draft                                             28 April 2022
+Internet-Draft                                          23 December 2022
 Intended status: Standards Track                                        
-Expires: 30 October 2022
+Expires: 26 June 2023
 
 
                   The Link-Template HTTP Header Field
@@ -29,6 +29,7 @@ About This Document
    Discussion of this document takes place on the Building Blocks for
    HTTP APIs Working Group mailing list (mailto:httpapi@ietf.org), which
    is archived at https://mailarchive.ietf.org/arch/browse/httpapi/.
+   Subscribe at https://www.ietf.org/mailman/listinfo/httpapi/.
 
    Source for this draft and an issue tracker can be found at
    https://github.com/ietf-wg-httpapi/link-template.
@@ -48,7 +49,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 30 October 2022.
+   This Internet-Draft will expire on 26 June 2023.
 
 Copyright Notice
 
@@ -93,25 +94,23 @@ Table of Contents
    BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
    capitals, as shown here.
 
-   This document uses the Augmented BNF defined in [HTTP] to specify
-   valid protocol elements.  Additionally, it uses the modified
-   "parameter" rule from [RFC5987] and the "URI-Template" rule from
-   [URI-TEMPLATE].
+   This specification uses the following terms from [STRUCTURED-FIELDS]:
+   List, String, Parameter.
 
 2.  The Link-Template Header Field
 
-   The Link-Template header field provides a means for serialising one
-   or more links into HTTP message metadata.  It is semantically
-   equivalent to the Link header field defined in Section 3 of
-   [WEB-LINKING], except that it uses URI Templates [URI-TEMPLATE] to
-   convey the structure of links.
+   The Link-Template header field is a Structured Field
+   [STRUCTURED-FIELDS] that serializes one or more links into HTTP
+   message metadata.  It is semantically equivalent to the Link header
+   field defined in Section 3 of [WEB-LINKING], except that it uses URI
+   Templates [URI-TEMPLATE] to convey the structure of links.
 
-   Link-Template  = "Link-Template" ":" #templated-link
-   templated-link = "<" URI-Template ">" *( ";" parameter )
+   Its value is a List of Strings.  Each String is a URI Template, and
+   Parameters on it carry associated metadata.
 
    For example:
 
-   Link-Template: </{username}>; rel="https://example.org/rel/user"
+   Link-Template: "/{username}"; rel="https://example.org/rel/user"
 
    indicates that a resource with the relation type
    "https://example.org/rel/user" can be found by interpolating the
@@ -128,12 +127,11 @@ Table of Contents
    Parameters on a templated-link have identical semantics to those of a
    Link header field.  This includes (but is not limited to) the use of
    the "rel" parameter to convey the relation type, the "anchor"
-   parameter to modify the context IRI, and so on.
+   parameter to modify the context IRI, and so on.  Parameter values
+   MUST be Strings.
 
    Likewise, the requirements for parameters on templated-links are the
-   same as those for a Link header field; in particular, the "rel"
-   parameter MUST NOT appear more than once, and if it does, the
-   templated-link MUST be ignored by parsers.
+   same as those for a Link header field.
 
    This specification defines additional semantics for the "var-base"
    parameter on templated-links; see below.
@@ -157,7 +155,7 @@ Table of Contents
 
    For example:
 
-   Link-Template: </widgets/{widget_id}>;
+   Link-Template: "/widgets/{widget_id}"
                   rel="https://example.org/rel/widget";
                   var-base="https://example.org/vars/"
 
@@ -170,7 +168,7 @@ Table of Contents
    is "https://example.org/", the same information could be conveyed by
    this header field:
 
-   Link-Template: </widgets/{widget_id}>;
+   Link-Template: "/widgets/{widget_id}";
                   rel="https://example.org/rel/widget";
                   var-base="/vars/"
 
@@ -201,14 +199,14 @@ Table of Contents
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/rfc/rfc2119>.
 
-   [RFC5987]  Reschke, J., "Character Set and Language Encoding for
-              Hypertext Transfer Protocol (HTTP) Header Field
-              Parameters", RFC 5987, DOI 10.17487/RFC5987, August 2010,
-              <https://www.rfc-editor.org/rfc/rfc5987>.
-
    [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [STRUCTURED-FIELDS]
+              Nottingham, M. and P-H. Kamp, "Structured Field Values for
+              HTTP", RFC 8941, DOI 10.17487/RFC8941, February 2021,
+              <https://www.rfc-editor.org/rfc/rfc8941>.
 
    [URI]      Berners-Lee, T., Fielding, R., and L. Masinter, "Uniform
               Resource Identifier (URI): Generic Syntax", STD 66,
